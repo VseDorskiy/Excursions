@@ -1,0 +1,1198 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Записаться на экскурсию</title>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+<style>
+:root{
+    --bg:var(--tg-theme-bg-color,#fff);
+    --text:var(--tg-theme-text-color,#111);
+    --hint:var(--tg-theme-hint-color,#707579);
+    --button:var(--tg-theme-button-color,#2481cc);
+    --button-text:var(--tg-theme-button-text-color,#fff);
+    --secondary:var(--tg-theme-secondary-bg-color,#f1f1f1);
+    --link:var(--tg-theme-link-color,#2481cc);
+    --danger:#d33b32;
+    --border:rgba(127,127,127,.25)
+}
+
+*{
+    box-sizing:border-box
+}
+
+html,body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    font-size:16px;
+    line-height:1.45
+}
+
+body{
+    padding:
+        max(16px,env(safe-area-inset-top))
+        max(16px,env(safe-area-inset-right))
+        max(24px,env(safe-area-inset-bottom))
+        max(16px,env(safe-area-inset-left))
+}
+
+.container{
+    width:min(100%,680px);
+    margin:auto
+}
+
+.section{
+    margin-bottom:22px
+}
+
+h1{
+    margin:0 0 16px;
+    font-size:clamp(21px,5vw,27px);
+    line-height:1.2
+}
+
+h2{
+    margin:0 0 14px;
+    font-size:clamp(17px,4.3vw,20px)
+}
+
+.excursion{
+    background:var(--secondary);
+    border-radius:14px;
+    padding:15px;
+    overflow-wrap:anywhere;
+    font-weight:600
+}
+
+.form-row{
+    margin-bottom:16px
+}
+
+.form-row label{
+    display:block;
+    margin-bottom:7px;
+    font-weight:600
+}
+
+.required{
+    color:var(--danger)
+}
+
+input[type=text],
+input[type=tel],
+input[type=email]{
+    width:100%;
+    min-height:48px;
+    padding:11px 13px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    background:var(--secondary);
+    color:var(--text);
+    font:inherit;
+    outline:none
+}
+
+input:focus{
+    border-color:var(--button)
+}
+
+input.invalid{
+    border-color:var(--danger)
+}
+
+.field-error{
+    display:none;
+    margin-top:5px;
+    color:var(--danger);
+    font-size:13px
+}
+
+.field-error.visible{
+    display:block
+}
+
+.counter{
+    display:grid;
+    grid-template-columns:52px 80px 52px;
+    align-items:center;
+    gap:8px
+}
+
+.counter button{
+    width:52px;
+    min-height:48px;
+    border:0;
+    border-radius:12px;
+    background:var(--secondary);
+    color:var(--text);
+    font:inherit;
+    font-size:25px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation
+}
+
+.counter button:disabled{
+    opacity:.4;
+    cursor:not-allowed
+}
+
+.counter-value{
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    background:var(--secondary);
+    font-size:18px;
+    font-weight:700
+}
+
+.limits{
+    margin-top:6px;
+    color:var(--hint);
+    font-size:13px
+}
+
+.total{
+    margin-top:8px;
+    padding:15px;
+    border-radius:14px;
+    background:var(--secondary);
+    font-size:18px;
+    font-weight:700
+}
+
+.amount{
+    font-size:21px
+}
+
+.check-row{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:13px 0;
+    border-top:1px solid var(--border);
+    cursor:pointer
+}
+
+.check-row input{
+    position:absolute;
+    opacity:0;
+    pointer-events:none
+}
+
+.box{
+    flex:0 0 25px;
+    width:25px;
+    height:25px;
+    border:2px solid var(--hint);
+    border-radius:6px;
+    display:grid;
+    place-items:center;
+    margin-top:1px
+}
+
+.check-row input:checked+.box{
+    background:var(--button);
+    border-color:var(--button)
+}
+
+.check-row input:checked+.box::after{
+    content:"✓";
+    color:var(--button-text);
+    font-size:17px;
+    font-weight:800
+}
+
+.check-content{
+    flex:1;
+    min-width:0
+}
+
+.check-title{
+    font-weight:600
+}
+
+.legal-link{
+    color:var(--link);
+    text-decoration:none
+}
+
+.legal-link:hover{
+    text-decoration:underline
+}
+
+.error-summary{
+    display:none;
+    margin-top:12px;
+    color:var(--danger);
+    font-size:14px
+}
+
+.error-summary.visible{
+    display:block
+}
+
+.actions{
+    display:grid;
+    grid-template-columns:1fr 1.25fr;
+    gap:10px;
+    margin-top:24px
+}
+
+button.action{
+    width:100%;
+    min-height:50px;
+    border:0;
+    border-radius:12px;
+    font:inherit;
+    font-weight:700;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation
+}
+
+.cancel{
+    background:var(--secondary);
+    color:var(--text)
+}
+
+.pay{
+    background:var(--button);
+    color:var(--button-text)
+}
+
+.pay:disabled{
+    opacity:.45;
+    cursor:not-allowed
+}
+
+.loading{
+    display:none;
+    margin-top:10px;
+    color:var(--hint);
+    text-align:center;
+    font-size:14px
+}
+
+.loading.visible{
+    display:block
+}
+</style>
+</head>
+
+<body>
+
+<main class="container">
+
+<section class="section">
+
+<h1>Записаться на экскурсию:</h1>
+
+<div class="excursion" id="excursionData">
+    Загрузка...
+</div>
+
+</section>
+
+
+<section class="section">
+
+<h2>Введите Ваши контактные данные:</h2>
+
+
+<div class="form-row">
+
+<label for="clientsName">
+    Имя и Фамилия <span class="required">*</span>
+</label>
+
+<input
+    id="clientsName"
+    type="text"
+    autocomplete="name"
+    placeholder="Введите имя и фамилию"
+    maxlength="100"
+>
+
+<div class="field-error" id="nameError">
+    Введите имя и фамилию: минимум два слова.
+</div>
+
+</div>
+
+
+<div class="form-row">
+
+<label for="clientsTelephoneNumber">
+    Телефон для связи <span class="required">*</span>
+</label>
+
+<input
+    id="clientsTelephoneNumber"
+    type="tel"
+    autocomplete="tel"
+    placeholder="+49..."
+    maxlength="25"
+>
+
+<div class="field-error" id="phoneError">
+    Введите корректный номер телефона.
+</div>
+
+</div>
+
+
+<div class="form-row">
+
+<label for="clientsEmail">
+    EMail <span class="required">*</span>
+</label>
+
+<input
+    id="clientsEmail"
+    type="email"
+    autocomplete="email"
+    placeholder="example@email.com"
+    maxlength="150"
+>
+
+<div class="field-error" id="emailError">
+    Введите корректный EMail.
+</div>
+
+</div>
+
+
+<div class="form-row">
+
+<label>
+    Количество мест:
+</label>
+
+<div class="counter">
+
+<button
+    type="button"
+    id="minusButton"
+    aria-label="Уменьшить"
+>
+    −
+</button>
+
+<div
+    class="counter-value"
+    id="personsValue"
+>
+    1
+</div>
+
+<button
+    type="button"
+    id="plusButton"
+    aria-label="Увеличить"
+>
+    +
+</button>
+
+</div>
+
+<div
+    class="limits"
+    id="personsLimits"
+></div>
+
+</div>
+
+
+<div class="total">
+
+Сумма к оплате:
+
+<span id="calculation">
+    1 × 0 =
+</span>
+
+<span
+    class="amount"
+    id="amountToPay"
+>
+    0
+</span>
+
+<span id="currency">
+    руб.
+</span>
+
+</div>
+
+</section>
+
+
+<section class="section">
+
+
+<label class="check-row">
+
+<input
+    type="checkbox"
+    id="privacy"
+>
+
+<span
+    class="box"
+    aria-hidden="true"
+></span>
+
+<span class="check-content">
+
+<span class="check-title">
+
+Я соглашаюсь с условиями
+
+<a
+    class="legal-link"
+    href="https://salebot.pro/terms"
+    target="_blank"
+    rel="noopener noreferrer"
+    onclick="event.stopPropagation();"
+>
+    Политика конфиденциальности
+</a>
+
+</span>
+
+</span>
+
+</label>
+
+
+<label class="check-row">
+
+<input
+    type="checkbox"
+    id="personalData"
+>
+
+<span
+    class="box"
+    aria-hidden="true"
+></span>
+
+<span class="check-content">
+
+<span class="check-title">
+
+Я согласен на обработку
+
+<a
+    class="legal-link"
+    href="https://salebot.pro/policy_ooo.pdf"
+    target="_blank"
+    rel="noopener noreferrer"
+    onclick="event.stopPropagation();"
+>
+    Персональных данных
+</a>
+
+</span>
+
+</span>
+
+</label>
+
+
+<div
+    class="error-summary"
+    id="errorSummary"
+>
+    Проверьте заполнение формы и подтвердите оба согласия.
+</div>
+
+
+<div
+    class="loading"
+    id="loading"
+>
+    Передача данных...
+</div>
+
+
+<div class="actions">
+
+<button
+    class="action cancel"
+    id="cancelButton"
+    type="button"
+>
+    Отменить
+</button>
+
+<button
+    class="action pay"
+    id="payButton"
+    type="button"
+    disabled
+>
+    Оплатить
+</button>
+
+</div>
+
+</section>
+
+</main>
+
+
+<script>
+
+(function(){
+
+/* ==========================================
+   TELEGRAM WEB APP
+   ========================================== */
+
+const tg =
+    window.Telegram &&
+    window.Telegram.WebApp
+        ? window.Telegram.WebApp
+        : null;
+
+
+if(tg){
+
+    tg.ready();
+    tg.expand();
+
+    if(typeof tg.setHeaderColor === 'function'){
+        tg.setHeaderColor('secondary_bg_color');
+    }
+
+    if(typeof tg.setBackgroundColor === 'function'){
+        tg.setBackgroundColor('bg_color');
+    }
+
+}
+
+
+/* ==========================================
+   URL PARAMETERS
+   ========================================== */
+
+const params =
+    new URLSearchParams(window.location.search);
+
+
+const excursionData =
+    params.get('Excursion_Data') || '';
+
+
+const bookPrice =
+    parseNumber(
+        params.get('Book_Price') || '0'
+    );
+
+
+const maxPersons =
+    Math.max(
+        1,
+        Math.floor(
+            parseNumber(
+                params.get('Max_Persons') || '1'
+            )
+        )
+    );
+
+
+let selectedPersons =
+    Math.floor(
+        parseNumber(
+            params.get('Selected_Persons') || '1'
+        )
+    );
+
+
+selectedPersons =
+    Math.min(
+        Math.max(selectedPersons,1),
+        maxPersons
+    );
+
+
+const currency =
+    params.get('Currency') || 'руб.';
+
+
+/*
+    НОВЫЙ ПАРАМЕТР
+
+    URL возврата после нажатия "Отменить".
+*/
+
+const returnUrl =
+    params.get('URL_Return_to_Channel') || '';
+
+
+/* ==========================================
+   ELEMENTS
+   ========================================== */
+
+const $ = id =>
+    document.getElementById(id);
+
+
+$('excursionData').textContent =
+    excursionData ||
+    'Экскурсия не указана';
+
+
+$('currency').textContent =
+    currency;
+
+
+$('personsLimits').textContent =
+    'Доступно мест: ' + maxPersons;
+
+
+/* ==========================================
+   NUMBER FUNCTIONS
+   ========================================== */
+
+function parseNumber(value){
+
+    const normalized =
+        String(value)
+            .replace(/\s/g,'')
+            .replace(',','.');
+
+    const number =
+        Number(normalized);
+
+    return Number.isFinite(number)
+        ? number
+        : 0;
+}
+
+
+function formatNumber(value){
+
+    return new Intl.NumberFormat(
+        'ru-RU',
+        {
+            maximumFractionDigits:2
+        }
+    ).format(value);
+
+}
+
+
+/* ==========================================
+   PERSONS
+   ========================================== */
+
+function updatePersons(){
+
+    $('personsValue').textContent =
+        String(selectedPersons);
+
+
+    /*
+       Кнопка "-" доступна,
+       если количество больше 1.
+    */
+
+    $('minusButton').disabled =
+        selectedPersons <= 1;
+
+
+    /*
+       Кнопка "+" доступна,
+       пока не достигнут Max_Persons.
+    */
+
+    $('plusButton').disabled =
+        selectedPersons >= maxPersons;
+
+
+    const total =
+        selectedPersons * bookPrice;
+
+
+    $('calculation').textContent =
+        selectedPersons +
+        ' × ' +
+        formatNumber(bookPrice) +
+        ' =';
+
+
+    $('amountToPay').textContent =
+        formatNumber(total);
+
+}
+
+
+/* ==========================================
+   VALIDATION
+   ========================================== */
+
+function validateName(show){
+
+    const element =
+        $('clientsName');
+
+    const value =
+        element.value
+            .trim()
+            .replace(/\s+/g,' ');
+
+    const valid =
+        /^[A-Za-zА-Яа-яЁё]+(?:-[A-Za-zА-Яа-яЁё]+)*(?: [A-Za-zА-Яа-яЁё]+(?:-[A-Za-zА-Яа-яЁё]+)*)+$/
+            .test(value);
+
+
+    if(show){
+
+        $('nameError')
+            .classList
+            .toggle(
+                'visible',
+                !valid
+            );
+
+        element.classList
+            .toggle(
+                'invalid',
+                !valid
+            );
+
+    }
+
+
+    return valid;
+
+}
+
+
+function validatePhone(show){
+
+    const element =
+        $('clientsTelephoneNumber');
+
+    const value =
+        element.value.trim();
+
+    const digits =
+        value.replace(/\D/g,'');
+
+    const valid =
+        /^[+()\d\s-]+$/.test(value) &&
+        digits.length >= 7 &&
+        digits.length <= 15;
+
+
+    if(show){
+
+        $('phoneError')
+            .classList
+            .toggle(
+                'visible',
+                !valid
+            );
+
+        element.classList
+            .toggle(
+                'invalid',
+                !valid
+            );
+
+    }
+
+
+    return valid;
+
+}
+
+
+function validateEmail(show){
+
+    const element =
+        $('clientsEmail');
+
+    const value =
+        element.value.trim();
+
+    const valid =
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+
+    if(show){
+
+        $('emailError')
+            .classList
+            .toggle(
+                'visible',
+                !valid
+            );
+
+        element.classList
+            .toggle(
+                'invalid',
+                !valid
+            );
+
+    }
+
+
+    return valid;
+
+}
+
+
+/* ==========================================
+   PAY BUTTON STATE
+   ========================================== */
+
+function updateState(){
+
+    const valid =
+        validateName(false) &&
+        validatePhone(false) &&
+        validateEmail(false) &&
+        $('privacy').checked &&
+        $('personalData').checked &&
+        selectedPersons >= 1 &&
+        selectedPersons <= maxPersons;
+
+
+    $('payButton').disabled =
+        !valid;
+
+}
+
+
+/* ==========================================
+   MINUS
+   ========================================== */
+
+$('minusButton')
+    .addEventListener(
+        'click',
+        function(){
+
+            if(selectedPersons <= 1){
+                return;
+            }
+
+
+            selectedPersons =
+                selectedPersons - 1;
+
+
+            updatePersons();
+            updateState();
+
+        }
+    );
+
+
+/* ==========================================
+   PLUS
+   ========================================== */
+
+$('plusButton')
+    .addEventListener(
+        'click',
+        function(){
+
+            if(selectedPersons >= maxPersons){
+                return;
+            }
+
+
+            selectedPersons =
+                selectedPersons + 1;
+
+
+            updatePersons();
+            updateState();
+
+        }
+    );
+
+
+/* ==========================================
+   INPUT EVENTS
+   ========================================== */
+
+[
+    'clientsName',
+    'clientsTelephoneNumber',
+    'clientsEmail'
+]
+.forEach(function(id){
+
+    $(id)
+        .addEventListener(
+            'input',
+            updateState
+        );
+
+});
+
+
+$('clientsName')
+    .addEventListener(
+        'blur',
+        function(){
+
+            validateName(true);
+            updateState();
+
+        }
+    );
+
+
+$('clientsTelephoneNumber')
+    .addEventListener(
+        'blur',
+        function(){
+
+            validatePhone(true);
+            updateState();
+
+        }
+    );
+
+
+$('clientsEmail')
+    .addEventListener(
+        'blur',
+        function(){
+
+            validateEmail(true);
+            updateState();
+
+        }
+    );
+
+
+$('privacy')
+    .addEventListener(
+        'change',
+        updateState
+    );
+
+
+$('personalData')
+    .addEventListener(
+        'change',
+        updateState
+    );
+
+
+/* ==========================================
+   CANCEL
+   ========================================== */
+
+$('cancelButton')
+    .addEventListener(
+        'click',
+        function(){
+
+            /*
+                Если URL возврата передан,
+                открываем его.
+            */
+
+            if(returnUrl){
+
+                /*
+                    Для Telegram-ссылки
+                    используем openTelegramLink(),
+                    если API доступен.
+                */
+
+                if(
+                    tg &&
+                    typeof tg.openTelegramLink === 'function' &&
+                    /^https?:\/\/t\.me\//i.test(returnUrl)
+                ){
+
+                    tg.openTelegramLink(returnUrl);
+
+                }
+                else if(
+                    tg &&
+                    typeof tg.openLink === 'function'
+                ){
+
+                    tg.openLink(returnUrl);
+
+                }
+                else{
+
+                    window.location.href =
+                        returnUrl;
+
+                }
+
+
+                /*
+                    Закрываем Web App
+                    после открытия ссылки.
+                */
+
+                setTimeout(
+                    function(){
+
+                        if(
+                            tg &&
+                            typeof tg.close === 'function'
+                        ){
+
+                            tg.close();
+
+                        }
+
+                    },
+                    100
+                );
+
+                return;
+
+            }
+
+
+            /*
+                Если URL не передан,
+                просто закрываем Web App.
+            */
+
+            if(
+                tg &&
+                typeof tg.close === 'function'
+            ){
+
+                tg.close();
+
+            }
+            else{
+
+                alert(
+                    'Тестовый режим: форма отменена.'
+                );
+
+            }
+
+        }
+    );
+
+
+/* ==========================================
+   PAY
+   ========================================== */
+
+$('payButton')
+    .addEventListener(
+        'click',
+        function(){
+
+            const valid =
+                validateName(true) &&
+                validatePhone(true) &&
+                validateEmail(true) &&
+                $('privacy').checked &&
+                $('personalData').checked;
+
+
+            if(!valid){
+
+                $('errorSummary')
+                    .classList
+                    .add('visible');
+
+                updateState();
+
+                return;
+
+            }
+
+
+            $('loading')
+                .classList
+                .add('visible');
+
+
+            $('payButton').disabled =
+                true;
+
+
+            /*
+                ВАЖНО:
+
+                Сейчас передаём в Salebot
+                РОВНО:
+
+                Оплатить
+
+                Без JSON.
+                Без дополнительных данных.
+            */
+
+            if(
+                tg &&
+                typeof tg.sendData === 'function'
+            ){
+
+                tg.sendData('Оплатить');
+
+            }
+            else{
+
+                /*
+                    Тестирование вне Telegram.
+                */
+
+                console.log('Оплатить');
+
+                alert(
+                    'Тестовый режим:\n\nОплатить'
+                );
+
+
+                $('loading')
+                    .classList
+                    .remove('visible');
+
+
+                updateState();
+
+            }
+
+        }
+    );
+
+
+/* ==========================================
+   INITIALIZATION
+   ========================================== */
+
+updatePersons();
+updateState();
+
+})();
+
+</script>
+
+</body>
+</html>
+```
