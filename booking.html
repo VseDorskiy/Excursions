@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Записаться на экскурсию</title>
-
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 <style>
 :root{
     --bg:var(--tg-theme-bg-color,#fff);
@@ -19,557 +17,201 @@
     --danger:#d33b32;
     --border:rgba(127,127,127,.25)
 }
-
-*{
-    box-sizing:border-box
-}
-
+*{box-sizing:border-box}
 html,body{
-    margin:0;
-    padding:0;
-    min-height:100%;
-    background:var(--bg);
-    color:var(--text);
+    margin:0;padding:0;min-height:100%;
+    background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    font-size:16px;
-    line-height:1.45
+    font-size:16px;line-height:1.45
 }
-
 body{
-    padding:
-        max(16px,env(safe-area-inset-top))
-        max(16px,env(safe-area-inset-right))
-        max(24px,env(safe-area-inset-bottom))
-        max(16px,env(safe-area-inset-left))
+    padding:max(16px,env(safe-area-inset-top))
+             max(16px,env(safe-area-inset-right))
+             max(24px,env(safe-area-inset-bottom))
+             max(16px,env(safe-area-inset-left))
 }
-
-.container{
-    width:min(100%,680px);
-    margin:auto
-}
-
-.section{
-    margin-bottom:22px
-}
-
-h1{
-    margin:0 0 16px;
-    font-size:clamp(21px,5vw,27px);
-    line-height:1.2
-}
-
-h2{
-    margin:0 0 14px;
-    font-size:clamp(17px,4.3vw,20px)
-}
-
+.container{width:min(100%,680px);margin:auto}
+.section{margin-bottom:22px}
+h1{margin:0 0 16px;font-size:clamp(21px,5vw,27px);line-height:1.2}
+h2{margin:0 0 14px;font-size:clamp(17px,4.3vw,20px)}
 .excursion{
-    background:var(--secondary);
-    border-radius:14px;
-    padding:15px;
-    overflow-wrap:anywhere;
-    font-weight:600
+    background:var(--secondary);border-radius:14px;padding:15px;
+    overflow-wrap:anywhere;font-weight:600
 }
-
-.form-row{
-    margin-bottom:16px
+.form-row{margin-bottom:16px}
+.form-row label{display:block;margin-bottom:7px;font-weight:600}
+.required{color:var(--danger)}
+input[type=text],input[type=tel],input[type=email]{
+    width:100%;min-height:48px;padding:11px 13px;
+    border:1px solid var(--border);border-radius:12px;
+    background:var(--secondary);color:var(--text);font:inherit;outline:none
 }
-
-.form-row label{
-    display:block;
-    margin-bottom:7px;
-    font-weight:600
-}
-
-.required{
-    color:var(--danger)
-}
-
-input[type=text],
-input[type=tel],
-input[type=email]{
-    width:100%;
-    min-height:48px;
-    padding:11px 13px;
-    border:1px solid var(--border);
-    border-radius:12px;
-    background:var(--secondary);
-    color:var(--text);
-    font:inherit;
-    outline:none
-}
-
-input:focus{
-    border-color:var(--button)
-}
-
-input.invalid{
-    border-color:var(--danger)
-}
-
-.field-error{
-    display:none;
-    margin-top:5px;
-    color:var(--danger);
-    font-size:13px
-}
-
-.field-error.visible{
-    display:block
-}
-
-.counter{
-    display:grid;
-    grid-template-columns:52px 80px 52px;
-    align-items:center;
-    gap:8px
-}
-
+input:focus{border-color:var(--button)}
+input.invalid{border-color:var(--danger)}
+.field-error{display:none;margin-top:5px;color:var(--danger);font-size:13px}
+.field-error.visible{display:block}
+.counter{display:grid;grid-template-columns:52px 80px 52px;align-items:center;gap:8px}
 .counter button{
-    width:52px;
-    min-height:48px;
-    border:0;
-    border-radius:12px;
-    background:var(--secondary);
-    color:var(--text);
-    font:inherit;
-    font-size:25px;
-    cursor:pointer;
-    -webkit-tap-highlight-color:transparent;
-    touch-action:manipulation
+    width:52px;min-height:48px;border:0;border-radius:12px;
+    background:var(--secondary);color:var(--text);font:inherit;font-size:25px;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation
 }
-
-.counter button:disabled{
-    opacity:.4;
-    cursor:not-allowed
-}
-
+.counter button:disabled{opacity:.4;cursor:not-allowed}
 .counter-value{
-    min-height:48px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-radius:12px;
-    background:var(--secondary);
-    font-size:18px;
-    font-weight:700
+    min-height:48px;display:flex;align-items:center;justify-content:center;
+    border-radius:12px;background:var(--secondary);font-size:18px;font-weight:700
 }
-
-.limits{
-    margin-top:6px;
-    color:var(--hint);
-    font-size:13px
-}
-
+.limits{margin-top:6px;color:var(--hint);font-size:13px}
 .total{
-    margin-top:8px;
-    padding:15px;
-    border-radius:14px;
-    background:var(--secondary);
-    font-size:18px;
-    font-weight:700
+    margin-top:8px;padding:15px;border-radius:14px;background:var(--secondary);
+    font-size:18px;font-weight:700
 }
-
-.amount{
-    font-size:21px
-}
-
+.amount{font-size:21px}
 .check-row{
-    display:flex;
-    align-items:flex-start;
-    gap:12px;
-    padding:13px 0;
-    border-top:1px solid var(--border);
-    cursor:pointer
+    display:flex;align-items:flex-start;gap:12px;padding:13px 0;
+    border-top:1px solid var(--border);cursor:pointer
 }
-
-.check-row input{
-    position:absolute;
-    opacity:0;
-    pointer-events:none
-}
-
+.check-row input{position:absolute;opacity:0;pointer-events:none}
 .box{
-    flex:0 0 25px;
-    width:25px;
-    height:25px;
-    border:2px solid var(--hint);
-    border-radius:6px;
-    display:grid;
-    place-items:center;
-    margin-top:1px
+    flex:0 0 25px;width:25px;height:25px;border:2px solid var(--hint);
+    border-radius:6px;display:grid;place-items:center;margin-top:1px
 }
-
-.check-row input:checked+.box{
-    background:var(--button);
-    border-color:var(--button)
-}
-
+.check-row input:checked+.box{background:var(--button);border-color:var(--button)}
 .check-row input:checked+.box::after{
-    content:"✓";
-    color:var(--button-text);
-    font-size:17px;
-    font-weight:800
+    content:"✓";color:var(--button-text);font-size:17px;font-weight:800
 }
-
-.check-content{
-    flex:1;
-    min-width:0
-}
-
-.check-title{
-    font-weight:600
-}
-
-.legal-link{
-    color:var(--link);
-    text-decoration:none
-}
-
-.legal-link:hover{
-    text-decoration:underline
-}
-
-.error-summary{
-    display:none;
-    margin-top:12px;
-    color:var(--danger);
-    font-size:14px
-}
-
-.error-summary.visible{
-    display:block
-}
-
-.actions{
-    display:grid;
-    grid-template-columns:1fr 1.25fr;
-    gap:10px;
-    margin-top:24px
-}
-
+.check-content{flex:1;min-width:0}
+.check-title{font-weight:600}
+.legal-link{color:var(--link);text-decoration:none}
+.legal-link:hover{text-decoration:underline}
+.error-summary{display:none;margin-top:12px;color:var(--danger);font-size:14px}
+.error-summary.visible{display:block}
+.actions{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;margin-top:24px}
 button.action{
-    width:100%;
-    min-height:50px;
-    border:0;
-    border-radius:12px;
-    font:inherit;
-    font-weight:700;
-    cursor:pointer;
-    -webkit-tap-highlight-color:transparent;
-    touch-action:manipulation
+    width:100%;min-height:50px;border:0;border-radius:12px;font:inherit;
+    font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation
 }
-
-.cancel{
-    background:var(--secondary);
-    color:var(--text)
-}
-
-.pay{
-    background:var(--button);
-    color:var(--button-text)
-}
-
-.pay:disabled{
-    opacity:.45;
-    cursor:not-allowed
-}
-
-.loading{
-    display:none;
-    margin-top:10px;
-    color:var(--hint);
-    text-align:center;
-    font-size:14px
-}
-
-.loading.visible{
-    display:block
-}
+.cancel{background:var(--secondary);color:var(--text)}
+.pay{background:var(--button);color:var(--button-text)}
+.pay:disabled{opacity:.45;cursor:not-allowed}
+.loading{display:none;margin-top:10px;color:var(--hint);text-align:center;font-size:14px}
+.loading.visible{display:block}
 </style>
 </head>
 
 <body>
-
 <main class="container">
 
 <section class="section">
-
-<h1>Записаться на экскурсию:</h1>
-
-<div class="excursion" id="excursionData">
-    Загрузка...
-</div>
-
+    <h1>Записаться на экскурсию:</h1>
+    <div class="excursion" id="excursionData">Загрузка...</div>
 </section>
 
+<section class="section">
+    <h2>Введите Ваши контактные данные:</h2>
+
+    <div class="form-row">
+        <label for="clientsName">Имя и Фамилия <span class="required">*</span></label>
+        <input id="clientsName" type="text" autocomplete="name"
+               placeholder="Введите имя и фамилию" maxlength="100">
+        <div class="field-error" id="nameError">
+            Введите имя и фамилию: минимум два слова.
+        </div>
+    </div>
+
+    <div class="form-row">
+        <label for="clientsTelephoneNumber">Телефон для связи <span class="required">*</span></label>
+        <input id="clientsTelephoneNumber" type="tel" autocomplete="tel"
+               inputmode="tel" placeholder="+7(111) 123-4567" maxlength="16">
+        <div class="field-error" id="phoneError">
+            Введите российский номер в формате +7(111) 123-4567.
+        </div>
+    </div>
+
+    <div class="form-row">
+        <label for="clientsEmail">EMail <span class="required">*</span></label>
+        <input id="clientsEmail" type="email" autocomplete="email"
+               placeholder="example@email.com" maxlength="150">
+        <div class="field-error" id="emailError">
+            Введите корректный EMail.
+        </div>
+    </div>
+
+    <div class="form-row">
+        <label>Количество мест:</label>
+        <div class="counter">
+            <button type="button" id="minusButton" aria-label="Уменьшить">−</button>
+            <div class="counter-value" id="personsValue">1</div>
+            <button type="button" id="plusButton" aria-label="Увеличить">+</button>
+        </div>
+        <div class="limits" id="personsLimits"></div>
+    </div>
+
+    <div class="total">
+        Сумма к оплате:
+        <span id="calculation">1 × 0 =</span>
+        <span class="amount" id="amountToPay">0</span>
+        <span id="currency">руб.</span>
+    </div>
+</section>
 
 <section class="section">
 
-<h2>Введите Ваши контактные данные:</h2>
-
-
-<div class="form-row">
-
-<label for="clientsName">
-    Имя и Фамилия <span class="required">*</span>
-</label>
-
-<input
-    id="clientsName"
-    type="text"
-    autocomplete="name"
-    placeholder="Введите имя и фамилию"
-    maxlength="100"
->
-
-<div class="field-error" id="nameError">
-    Введите имя и фамилию: минимум два слова.
-</div>
-
-</div>
-
-
-<div class="form-row">
-
-<label for="clientsTelephoneNumber">
-    Телефон для связи <span class="required">*</span>
-</label>
-
-<input
-    id="clientsTelephoneNumber"
-    type="tel"
-    autocomplete="tel"
-    inputmode="tel"
-    placeholder="+7(___) ___-____"
-    maxlength="16"
->
-
-<div class="field-error" id="phoneError">
-    Введите российский номер в формате +7(999) 123-4567.
-</div>
-
-</div>
-
-
-<div class="form-row">
-
-<label for="clientsEmail">
-    EMail <span class="required">*</span>
-</label>
-
-<input
-    id="clientsEmail"
-    type="email"
-    autocomplete="email"
-    placeholder="example@email.com"
-    maxlength="150"
->
-
-<div class="field-error" id="emailError">
-    Введите корректный EMail.
-</div>
-
-</div>
-
-
-<div class="form-row">
-
-<label>
-    Количество мест:
-</label>
-
-<div class="counter">
-
-<button
-    type="button"
-    id="minusButton"
-    aria-label="Уменьшить"
->
-    −
-</button>
-
-<div
-    class="counter-value"
-    id="personsValue"
->
-    1
-</div>
-
-<button
-    type="button"
-    id="plusButton"
-    aria-label="Увеличить"
->
-    +
-</button>
-
-</div>
-
-<div
-    class="limits"
-    id="personsLimits"
-></div>
-
-</div>
-
-
-<div class="total">
-
-Сумма к оплате:
-
-<span id="calculation">
-    1 × 0 =
-</span>
-
-<span
-    class="amount"
-    id="amountToPay"
->
-    0
-</span>
-
-<span id="currency">
-    руб.
-</span>
-
-</div>
-
-</section>
-
-
-<section class="section">
-
-
-<label class="check-row">
-
-<input
-    type="checkbox"
-    id="privacy"
->
-
-<span
-    class="box"
-    aria-hidden="true"
-></span>
-
-<span class="check-content">
-
-<span class="check-title">
-
-Я соглашаюсь с условиями
-
-<a
-    class="legal-link"
-    href="https://salebot.pro/terms"
-    target="_blank"
-    rel="noopener noreferrer"
-    onclick="event.stopPropagation();"
->
-    Политика конфиденциальности
-</a>
-
-</span>
-
-</span>
-
-</label>
-
-
-<label class="check-row">
-
-<input
-    type="checkbox"
-    id="personalData"
->
-
-<span
-    class="box"
-    aria-hidden="true"
-></span>
-
-<span class="check-content">
-
-<span class="check-title">
-
-Я согласен на обработку
-
-<a
-    class="legal-link"
-    href="https://salebot.pro/policy_ooo.pdf"
-    target="_blank"
-    rel="noopener noreferrer"
-    onclick="event.stopPropagation();"
->
-    Персональных данных
-</a>
-
-</span>
-
-</span>
-
-</label>
-
-
-<div
-    class="error-summary"
-    id="errorSummary"
->
-    Проверьте заполнение формы и подтвердите оба согласия.
-</div>
-
-
-<div
-    class="loading"
-    id="loading"
->
-    Передача данных...
-</div>
-
-
-<div class="actions">
-
-<button
-    class="action cancel"
-    id="cancelButton"
-    type="button"
->
-    Отменить
-</button>
-
-<button
-    class="action pay"
-    id="payButton"
-    type="button"
-    disabled
->
-    Оплатить
-</button>
-
-</div>
-
+    <label class="check-row">
+        <input type="checkbox" id="privacy">
+        <span class="box" aria-hidden="true"></span>
+        <span class="check-content">
+            <span class="check-title">
+                Я соглашаюсь с условиями
+                <a class="legal-link"
+                   href="https://salebot.pro/terms"
+                   target="_blank" rel="noopener noreferrer"
+                   onclick="event.stopPropagation();">
+                    Политика конфиденциальности
+                </a>
+            </span>
+        </span>
+    </label>
+
+    <label class="check-row">
+        <input type="checkbox" id="personalData">
+        <span class="box" aria-hidden="true"></span>
+        <span class="check-content">
+            <span class="check-title">
+                Я согласен на обработку
+                <a class="legal-link"
+                   href="https://salebot.pro/policy_ooo.pdf"
+                   target="_blank" rel="noopener noreferrer"
+                   onclick="event.stopPropagation();">
+                    Персональных данных
+                </a>
+            </span>
+        </span>
+    </label>
+
+    <div class="error-summary" id="errorSummary">
+        Проверьте заполнение формы и подтвердите оба согласия.
+    </div>
+
+    <div class="loading" id="loading">Передача данных...</div>
+
+    <div class="actions">
+        <button class="action cancel" id="cancelButton" type="button">Отменить</button>
+        <button class="action pay" id="payButton" type="button" disabled>Оплатить</button>
+    </div>
 </section>
 
 </main>
 
-
 <script>
-
 (function(){
 
-/* ==========================================
-   TELEGRAM WEB APP
-   ========================================== */
-
 const tg =
-    window.Telegram &&
-    window.Telegram.WebApp
+    window.Telegram && window.Telegram.WebApp
         ? window.Telegram.WebApp
         : null;
 
-
 if(tg){
-
     tg.ready();
     tg.expand();
 
@@ -580,115 +222,86 @@ if(tg){
     if(typeof tg.setBackgroundColor === 'function'){
         tg.setBackgroundColor('bg_color');
     }
-
 }
-
 
 /* ==========================================
    URL PARAMETERS
    ========================================== */
 
-const params =
-    new URLSearchParams(window.location.search);
-
+const params = new URLSearchParams(window.location.search);
 
 const excursionData =
     params.get('Excursion_Data') || '';
 
+const clientsName =
+    params.get('clientsName') || '';
+
+const clientsTelephoneNumber =
+    params.get('clientsTelephoneNumber') || '';
+
+const clientsEmail =
+    params.get('clientsEmail') || '';
 
 const bookPrice =
-    parseNumber(
-        params.get('Book_Price') || '0'
-    );
-
+    parseNumber(params.get('Book_Price') || '0');
 
 const maxPersons =
     Math.max(
         1,
-        Math.floor(
-            parseNumber(
-                params.get('Max_Persons') || '1'
-            )
-        )
+        Math.floor(parseNumber(params.get('Max_Persons') || '1'))
     );
-
 
 let selectedPersons =
-    Math.floor(
-        parseNumber(
-            params.get('Selected_Persons') || '1'
-        )
-    );
-
+    Math.floor(parseNumber(params.get('Selected_Persons') || '1'));
 
 selectedPersons =
-    Math.min(
-        Math.max(selectedPersons,1),
-        maxPersons
-    );
-
+    Math.min(Math.max(selectedPersons, 1), maxPersons);
 
 const currency =
     params.get('Currency') || 'руб.';
 
-
+/*
+   URLSearchParams уже декодирует значение один раз.
+   Salebot должен передавать URL_Return_to_Channel
+   закодированным ровно один раз.
+*/
 const returnUrl =
     params.get('URL_Return_to_Channel') || '';
-
 
 /* ==========================================
    ELEMENTS
    ========================================== */
 
-const $ = id =>
-    document.getElementById(id);
-
+const $ = id => document.getElementById(id);
 
 $('excursionData').textContent =
-    excursionData ||
-    'Экскурсия не указана';
+    excursionData || 'Экскурсия не указана';
 
-
-$('currency').textContent =
-    currency;
-
+$('currency').textContent = currency;
 
 $('personsLimits').textContent =
     'Доступно мест: ' + maxPersons;
-
 
 /* ==========================================
    NUMBER FUNCTIONS
    ========================================== */
 
 function parseNumber(value){
-
     const normalized =
         String(value)
             .replace(/\s/g,'')
             .replace(',','.');
 
-    const number =
-        Number(normalized);
+    const number = Number(normalized);
 
-    return Number.isFinite(number)
-        ? number
-        : 0;
-
+    return Number.isFinite(number) ? number : 0;
 }
-
 
 function formatNumber(value){
-
-    return new Intl.NumberFormat(
-        'ru-RU',
-        {
-            maximumFractionDigits:2
-        }
-    ).format(value);
-
+    return new Intl.NumberFormat('ru-RU',{
+        maximumFractionDigits:2
+    }).format(value);
 }
-
 
 /* ==========================================
    PERSONS
@@ -699,246 +312,151 @@ function updatePersons(){
     $('personsValue').textContent =
         String(selectedPersons);
 
-
     $('minusButton').disabled =
         selectedPersons <= 1;
-
 
     $('plusButton').disabled =
         selectedPersons >= maxPersons;
 
-
     const total =
         selectedPersons * bookPrice;
 
-
     $('calculation').textContent =
-        selectedPersons +
-        ' × ' +
-        formatNumber(bookPrice) +
-        ' =';
-
+        selectedPersons + ' × ' + formatNumber(bookPrice) + ' =';
 
     $('amountToPay').textContent =
         formatNumber(total);
-
 }
-
 
 /* ==========================================
    PHONE
    ========================================== */
 
-/*
-    Получение только цифр.
-*/
-
 function getPhoneDigits(value){
-
-    return String(value)
-        .replace(/\D/g,'');
-
+    return String(value || '').replace(/\D/g,'');
 }
 
-
 /*
-    Приведение любого допустимого российского
-    ввода к 10 цифрам после кода страны.
-
-    Примеры:
-
-    9111234567
-    89111234567
-    +79111234567
-
-    -> 9111234567
+   Возвращает 10 цифр российского номера.
+   Поддерживает:
+   79861234567
+   89861234567
+   +79861234567
+   9861234567
 */
-
 function normalizeRussianPhoneDigits(value){
 
-    let digits =
-        getPhoneDigits(value);
-
-
-    /*
-        Если пользователь ввёл 8XXXXXXXXXX,
-        заменяем 8 на код России 7.
-    */
+    let digits = getPhoneDigits(value);
 
     if(
         digits.length === 11 &&
         digits.charAt(0) === '8'
     ){
-
-        digits =
-            '7' + digits.slice(1);
-
+        digits = digits.slice(1);
     }
-
-
-    /*
-        Если введено 7XXXXXXXXXX,
-        убираем код страны.
-    */
-
-    if(
+    else if(
         digits.length === 11 &&
         digits.charAt(0) === '7'
     ){
-
-        return digits.slice(1);
-
+        digits = digits.slice(1);
     }
-
-
-    /*
-        Если уже 10 цифр,
-        считаем это номером без кода страны.
-    */
 
     if(digits.length === 10){
-
         return digits;
-
     }
-
 
     return '';
-
 }
 
-
 /*
-    Форматирование отображаемого номера.
+   Отображение:
+   +7(986) 123-4567
 
-    Результат:
-
-    +7(911) 123-4567
+   Важно:
+   функция корректно работает и при вводе
+   номера по одной цифре.
 */
-
 function formatRussianPhone(value){
 
-    const localDigits =
-        normalizeRussianPhoneDigits(value);
+    let digits = getPhoneDigits(value);
 
-
-    if(!localDigits){
-
+    if(!digits){
         return '';
-
     }
 
+    /*
+       Если первым символом введена 8,
+       считаем её кодом выхода на российскую
+       телефонную сеть.
+    */
+    if(digits.charAt(0) === '8'){
+        digits = digits.slice(1);
+    }
 
-    let result =
-        '+7(';
+    /*
+       Если введено 7 в начале, это код страны.
+    */
+    else if(
+        digits.charAt(0) === '7' &&
+        digits.length > 10
+    ){
+        digits = digits.slice(1);
+    }
 
+    digits = digits.slice(0,10);
 
-    result +=
-        localDigits.slice(0,3);
+    if(!digits){
+        return '';
+    }
 
+    let result = '+7(';
 
-    if(localDigits.length >= 3){
+    result += digits.slice(0,3);
 
+    if(digits.length >= 3){
         result += ') ';
-
     }
 
-
-    if(localDigits.length > 3){
-
-        result +=
-            localDigits.slice(3,6);
-
+    if(digits.length > 3){
+        result += digits.slice(3,6);
     }
 
-
-    if(localDigits.length > 6){
-
-        result += '-';
-
-        result +=
-            localDigits.slice(6,10);
-
+    if(digits.length > 6){
+        result += '-' + digits.slice(6,10);
     }
-
 
     return result;
-
 }
 
-
 /*
-    Нормализованный номер для Salebot.
-
-    Например:
-
-    +79111234567
+   Нормализованный номер для дальнейшей
+   передачи:
+   +79861234567
 */
-
 function getNormalizedPhone(){
 
-    const localDigits =
+    const digits =
         normalizeRussianPhoneDigits(
             $('clientsTelephoneNumber').value
         );
 
-
-    if(localDigits.length !== 10){
-
+    if(digits.length !== 10){
         return '';
-
     }
 
-
-    return '+7' + localDigits;
-
+    return '+7' + digits;
 }
-
-
-/*
-    Обработка ввода телефона.
-
-    Пока пользователь печатает,
-    поле автоматически форматируется.
-*/
 
 function handlePhoneInput(){
 
     const input =
         $('clientsTelephoneNumber');
 
-
-    const cursorAtEnd =
-        input.selectionStart === input.value.length;
-
-
-    const formatted =
+    input.value =
         formatRussianPhone(input.value);
 
-
-    input.value =
-        formatted;
-
-
-    /*
-        Для обычного ввода сохраняем
-        курсор в конце строки.
-    */
-
-    if(cursorAtEnd){
-
-        input.setSelectionRange(
-            input.value.length,
-            input.value.length
-        );
-
-    }
-
-
     updateState();
-
 }
-
 
 /* ==========================================
    VALIDATION
@@ -946,129 +464,62 @@ function handlePhoneInput(){
 
 function validateName(show){
 
-    const element =
-        $('clientsName');
-
+    const element = $('clientsName');
 
     const value =
         element.value
             .trim()
             .replace(/\s+/g,' ');
 
-
     const valid =
         /^[A-Za-zА-Яа-яЁё]+(?:-[A-Za-zА-Яа-яЁё]+)*(?: [A-Za-zА-Яа-яЁё]+(?:-[A-Za-zА-Яа-яЁё]+)*)+$/
-            .test(value);
-
+        .test(value);
 
     if(show){
-
-        $('nameError')
-            .classList
-            .toggle(
-                'visible',
-                !valid
-            );
-
-
-        element.classList
-            .toggle(
-                'invalid',
-                !valid
-            );
-
+        $('nameError').classList.toggle('visible', !valid);
+        element.classList.toggle('invalid', !valid);
     }
 
-
     return valid;
-
 }
-
-
-/*
-    Проверка именно российского номера:
-
-    +7(XXX) XXX-XXXX
-
-    Внутри обязательно 10 цифр
-    после +7.
-*/
 
 function validatePhone(show){
 
     const element =
         $('clientsTelephoneNumber');
 
-
     const normalized =
         getNormalizedPhone();
-
 
     const valid =
         /^\+7\d{10}$/.test(normalized);
 
-
     if(show){
-
-        $('phoneError')
-            .classList
-            .toggle(
-                'visible',
-                !valid
-            );
-
-
-        element.classList
-            .toggle(
-                'invalid',
-                !valid
-            );
-
+        $('phoneError').classList.toggle('visible', !valid);
+        element.classList.toggle('invalid', !valid);
     }
 
-
     return valid;
-
 }
-
 
 function validateEmail(show){
 
     const element =
         $('clientsEmail');
 
-
     const value =
         element.value.trim();
-
 
     const valid =
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
-
     if(show){
-
-        $('emailError')
-            .classList
-            .toggle(
-                'visible',
-                !valid
-            );
-
-
-        element.classList
-            .toggle(
-                'invalid',
-                !valid
-            );
-
+        $('emailError').classList.toggle('visible', !valid);
+        element.classList.toggle('invalid', !valid);
     }
 
-
     return valid;
-
 }
-
 
 /* ==========================================
    PAY BUTTON STATE
@@ -1085,361 +536,253 @@ function updateState(){
         selectedPersons >= 1 &&
         selectedPersons <= maxPersons;
 
-
-    $('payButton').disabled =
-        !valid;
-
+    $('payButton').disabled = !valid;
 }
 
-
 /* ==========================================
-   MINUS
+   PERSON BUTTONS
    ========================================== */
 
-$('minusButton')
-    .addEventListener(
-        'click',
-        function(){
+$('minusButton').addEventListener('click',function(){
 
-            if(selectedPersons <= 1){
+    if(selectedPersons <= 1){
+        return;
+    }
 
-                return;
+    selectedPersons--;
 
-            }
+    updatePersons();
+    updateState();
+});
 
+$('plusButton').addEventListener('click',function(){
 
-            selectedPersons =
-                selectedPersons - 1;
+    if(selectedPersons >= maxPersons){
+        return;
+    }
 
+    selectedPersons++;
 
-            updatePersons();
-            updateState();
-
-        }
-    );
-
-
-/* ==========================================
-   PLUS
-   ========================================== */
-
-$('plusButton')
-    .addEventListener(
-        'click',
-        function(){
-
-            if(selectedPersons >= maxPersons){
-
-                return;
-
-            }
-
-
-            selectedPersons =
-                selectedPersons + 1;
-
-
-            updatePersons();
-            updateState();
-
-        }
-    );
-
+    updatePersons();
+    updateState();
+});
 
 /* ==========================================
    INPUT EVENTS
    ========================================== */
 
-$('clientsName')
-    .addEventListener(
-        'input',
-        updateState
-    );
+$('clientsName').addEventListener(
+    'input',
+    updateState
+);
 
+$('clientsTelephoneNumber').addEventListener(
+    'input',
+    handlePhoneInput
+);
 
-$('clientsTelephoneNumber')
-    .addEventListener(
-        'input',
-        handlePhoneInput
-    );
+$('clientsEmail').addEventListener(
+    'input',
+    updateState
+);
 
+$('clientsName').addEventListener(
+    'blur',
+    function(){
+        validateName(true);
+        updateState();
+    }
+);
 
-$('clientsEmail')
-    .addEventListener(
-        'input',
-        updateState
-    );
+$('clientsTelephoneNumber').addEventListener(
+    'blur',
+    function(){
 
+        const input =
+            $('clientsTelephoneNumber');
 
-$('clientsName')
-    .addEventListener(
-        'blur',
-        function(){
+        input.value =
+            formatRussianPhone(input.value);
 
-            validateName(true);
-            updateState();
+        validatePhone(true);
+        updateState();
+    }
+);
 
-        }
-    );
+$('clientsEmail').addEventListener(
+    'blur',
+    function(){
+        validateEmail(true);
+        updateState();
+    }
+);
 
+$('privacy').addEventListener(
+    'change',
+    updateState
+);
 
-$('clientsTelephoneNumber')
-    .addEventListener(
-        'blur',
-        function(){
-
-            /*
-                После завершения ввода
-                ещё раз форматируем номер.
-            */
-
-            const input =
-                $('clientsTelephoneNumber');
-
-
-            input.value =
-                formatRussianPhone(
-                    input.value
-                );
-
-
-            validatePhone(true);
-            updateState();
-
-        }
-    );
-
-
-$('clientsEmail')
-    .addEventListener(
-        'blur',
-        function(){
-
-            validateEmail(true);
-            updateState();
-
-        }
-    );
-
-
-$('privacy')
-    .addEventListener(
-        'change',
-        updateState
-    );
-
-
-$('personalData')
-    .addEventListener(
-        'change',
-        updateState
-    );
-
+$('personalData').addEventListener(
+    'change',
+    updateState
+);
 
 /* ==========================================
    CANCEL
    ========================================== */
 
-$('cancelButton')
-    .addEventListener(
-        'click',
-        function(){
+$('cancelButton').addEventListener(
+    'click',
+    function(){
 
-            if(returnUrl){
-
-                if(
-                    tg &&
-                    typeof tg.openTelegramLink === 'function' &&
-                    /^https?:\/\/t\.me\//i.test(returnUrl)
-                ){
-
-                    tg.openTelegramLink(returnUrl);
-
-                }
-                else if(
-                    tg &&
-                    typeof tg.openLink === 'function'
-                ){
-
-                    tg.openLink(returnUrl);
-
-                }
-                else{
-
-                    window.location.href =
-                        returnUrl;
-
-                }
-
-
-                setTimeout(
-                    function(){
-
-                        if(
-                            tg &&
-                            typeof tg.close === 'function'
-                        ){
-
-                            tg.close();
-
-                        }
-
-                    },
-                    100
-                );
-
-                return;
-
-            }
-
+        if(returnUrl){
 
             if(
                 tg &&
-                typeof tg.close === 'function'
+                typeof tg.openTelegramLink === 'function' &&
+                /^https?:\/\/t\.me\//i.test(returnUrl)
             ){
 
-                tg.close();
+                tg.openTelegramLink(returnUrl);
+
+            }
+            else if(
+                tg &&
+                typeof tg.openLink === 'function'
+            ){
+
+                tg.openLink(returnUrl);
 
             }
             else{
 
-                alert(
-                    'Тестовый режим: форма отменена.'
-                );
+                window.location.href = returnUrl;
 
             }
 
-        }
-    );
+            setTimeout(function(){
 
+                if(
+                    tg &&
+                    typeof tg.close === 'function'
+                ){
+                    tg.close();
+                }
+
+            },100);
+
+            return;
+        }
+
+        if(
+            tg &&
+            typeof tg.close === 'function'
+        ){
+            tg.close();
+        }
+        else{
+            alert('Тестовый режим: форма отменена.');
+        }
+    }
+);
 
 /* ==========================================
    PAY
    ========================================== */
 
-$('payButton')
-    .addEventListener(
-        'click',
-        function(){
+$('payButton').addEventListener(
+    'click',
+    function(){
 
-            const valid =
-                validateName(true) &&
-                validatePhone(true) &&
-                validateEmail(true) &&
-                $('privacy').checked &&
-                $('personalData').checked;
+        const valid =
+            validateName(true) &&
+            validatePhone(true) &&
+            validateEmail(true) &&
+            $('privacy').checked &&
+            $('personalData').checked;
 
+        if(!valid){
 
-            if(!valid){
-
-                $('errorSummary')
-                    .classList
-                    .add('visible');
-
-
-                updateState();
-
-                return;
-
-            }
-
-
-            /*
-                Перед отправкой ещё раз
-                нормализуем телефон.
-
-                В форме он остаётся:
-
-                +7(911) 123-4567
-
-                А нормализованное значение:
-
-                +79111234567
-            */
-
-            const normalizedPhone =
-                getNormalizedPhone();
-
-
-            if(!/^\+7\d{10}$/.test(normalizedPhone)){
-
-                validatePhone(true);
-
-                $('errorSummary')
-                    .classList
-                    .add('visible');
-
-                updateState();
-
-                return;
-
-            }
-
-
-            /*
-                Нормализованный номер теперь
-                доступен для дальнейшего использования.
-
-                Пока tg.sendData отправляет
-                ТОЛЬКО слово "Оплатить",
-                как было задано.
-            */
-
-            $('loading')
+            $('errorSummary')
                 .classList
                 .add('visible');
 
+            updateState();
+            return;
+        }
 
-            $('payButton').disabled =
-                true;
+        /*
+           Нормализованный номер уже готов:
+           +79861234567
 
+           Пока он НЕ отправляется.
+           Кнопка отправляет в Salebot ровно:
+           Оплатить
+        */
+        const normalizedPhone =
+            getNormalizedPhone();
 
-            if(
-                tg &&
-                typeof tg.sendData === 'function'
-            ){
+        console.log(
+            'Normalized phone:',
+            normalizedPhone
+        );
 
-                /*
-                    ВАЖНО:
+        $('loading')
+            .classList
+            .add('visible');
 
-                    Salebot получает ровно:
+        $('payButton').disabled = true;
 
-                    Оплатить
-                */
+        if(
+            tg &&
+            typeof tg.sendData === 'function'
+        ){
 
-                tg.sendData('Оплатить');
-
-            }
-            else{
-
-                console.log(
-                    'Оплатить'
-                );
-
-
-                console.log(
-                    'Нормализованный телефон:',
-                    normalizedPhone
-                );
-
-
-                alert(
-                    'Тестовый режим:\n\nОплатить'
-                );
-
-
-                $('loading')
-                    .classList
-                    .remove('visible');
-
-
-                updateState();
-
-            }
+            tg.sendData('Оплатить');
 
         }
-    );
+        else{
 
+            console.log('Оплатить');
+
+            alert(
+                'Тестовый режим:\n\nОплатить'
+            );
+
+            $('loading')
+                .classList
+                .remove('visible');
+
+            updateState();
+        }
+    }
+);
+
+/* ==========================================
+   INITIAL DATA FROM URL
+   ========================================== */
+
+/*
+   Имя и EMail приходят уже декодированными
+   через URLSearchParams.
+*/
+$('clientsName').value =
+    clientsName;
+
+$('clientsEmail').value =
+    clientsEmail;
+
+/*
+   Телефон приходит без urlencode:
+   79861234567
+
+   В поле сразу отображается:
+   +7(986) 123-4567
+*/
+$('clientsTelephoneNumber').value =
+    formatRussianPhone(
+        clientsTelephoneNumber
+    );
 
 /* ==========================================
    INITIALIZATION
@@ -1449,8 +792,6 @@ updatePersons();
 updateState();
 
 })();
-
 </script>
-
 </body>
 </html>
