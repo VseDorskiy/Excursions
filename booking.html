@@ -340,12 +340,13 @@ button.action{
     id="clientsTelephoneNumber"
     type="tel"
     autocomplete="tel"
-    placeholder="+49..."
-    maxlength="25"
+    inputmode="tel"
+    placeholder="+7(111) 123-4567"
+    maxlength="16"
 >
 
 <div class="field-error" id="phoneError">
-    Введите корректный номер телефона.
+    Введите российский номер в формате +7(111) 123-4567.
 </div>
 
 </div>
@@ -631,12 +632,6 @@ const currency =
     params.get('Currency') || 'руб.';
 
 
-/*
-    НОВЫЙ ПАРАМЕТР
-
-    URL возврата после нажатия "Отменить".
-*/
-
 const returnUrl =
     params.get('URL_Return_to_Channel') || '';
 
@@ -679,6 +674,7 @@ function parseNumber(value){
     return Number.isFinite(number)
         ? number
         : 0;
+
 }
 
 
@@ -704,19 +700,9 @@ function updatePersons(){
         String(selectedPersons);
 
 
-    /*
-       Кнопка "-" доступна,
-       если количество больше 1.
-    */
-
     $('minusButton').disabled =
         selectedPersons <= 1;
 
-
-    /*
-       Кнопка "+" доступна,
-       пока не достигнут Max_Persons.
-    */
 
     $('plusButton').disabled =
         selectedPersons >= maxPersons;
@@ -740,6 +726,221 @@ function updatePersons(){
 
 
 /* ==========================================
+   PHONE
+   ========================================== */
+
+/*
+    Получение только цифр.
+*/
+
+function getPhoneDigits(value){
+
+    return String(value)
+        .replace(/\D/g,'');
+
+}
+
+
+/*
+    Приведение любого допустимого российского
+    ввода к 10 цифрам после кода страны.
+
+    Примеры:
+
+    9111234567
+    89111234567
+    +79111234567
+
+    -> 9111234567
+*/
+
+function normalizeRussianPhoneDigits(value){
+
+    let digits =
+        getPhoneDigits(value);
+
+
+    /*
+        Если пользователь ввёл 8XXXXXXXXXX,
+        заменяем 8 на код России 7.
+    */
+
+    if(
+        digits.length === 11 &&
+        digits.charAt(0) === '8'
+    ){
+
+        digits =
+            '7' + digits.slice(1);
+
+    }
+
+
+    /*
+        Если введено 7XXXXXXXXXX,
+        убираем код страны.
+    */
+
+    if(
+        digits.length === 11 &&
+        digits.charAt(0) === '7'
+    ){
+
+        return digits.slice(1);
+
+    }
+
+
+    /*
+        Если уже 10 цифр,
+        считаем это номером без кода страны.
+    */
+
+    if(digits.length === 10){
+
+        return digits;
+
+    }
+
+
+    return '';
+
+}
+
+
+/*
+    Форматирование отображаемого номера.
+
+    Результат:
+
+    +7(911) 123-4567
+*/
+
+function formatRussianPhone(value){
+
+    const localDigits =
+        normalizeRussianPhoneDigits(value);
+
+
+    if(!localDigits){
+
+        return '';
+
+    }
+
+
+    let result =
+        '+7(';
+
+
+    result +=
+        localDigits.slice(0,3);
+
+
+    if(localDigits.length >= 3){
+
+        result += ') ';
+
+    }
+
+
+    if(localDigits.length > 3){
+
+        result +=
+            localDigits.slice(3,6);
+
+    }
+
+
+    if(localDigits.length > 6){
+
+        result += '-';
+
+        result +=
+            localDigits.slice(6,10);
+
+    }
+
+
+    return result;
+
+}
+
+
+/*
+    Нормализованный номер для Salebot.
+
+    Например:
+
+    +79111234567
+*/
+
+function getNormalizedPhone(){
+
+    const localDigits =
+        normalizeRussianPhoneDigits(
+            $('clientsTelephoneNumber').value
+        );
+
+
+    if(localDigits.length !== 10){
+
+        return '';
+
+    }
+
+
+    return '+7' + localDigits;
+
+}
+
+
+/*
+    Обработка ввода телефона.
+
+    Пока пользователь печатает,
+    поле автоматически форматируется.
+*/
+
+function handlePhoneInput(){
+
+    const input =
+        $('clientsTelephoneNumber');
+
+
+    const cursorAtEnd =
+        input.selectionStart === input.value.length;
+
+
+    const formatted =
+        formatRussianPhone(input.value);
+
+
+    input.value =
+        formatted;
+
+
+    /*
+        Для обычного ввода сохраняем
+        курсор в конце строки.
+    */
+
+    if(cursorAtEnd){
+
+        input.setSelectionRange(
+            input.value.length,
+            input.value.length
+        );
+
+    }
+
+
+    updateState();
+
+}
+
+
+/* ==========================================
    VALIDATION
    ========================================== */
 
@@ -748,10 +949,12 @@ function validateName(show){
     const element =
         $('clientsName');
 
+
     const value =
         element.value
             .trim()
             .replace(/\s+/g,' ');
+
 
     const valid =
         /^[A-Za-zА-Яа-яЁё]+(?:-[A-Za-zА-Яа-яЁё]+)*(?: [A-Za-zА-Яа-яЁё]+(?:-[A-Za-zА-Яа-яЁё]+)*)+$/
@@ -767,6 +970,7 @@ function validateName(show){
                 !valid
             );
 
+
         element.classList
             .toggle(
                 'invalid',
@@ -781,21 +985,27 @@ function validateName(show){
 }
 
 
+/*
+    Проверка именно российского номера:
+
+    +7(XXX) XXX-XXXX
+
+    Внутри обязательно 10 цифр
+    после +7.
+*/
+
 function validatePhone(show){
 
     const element =
         $('clientsTelephoneNumber');
 
-    const value =
-        element.value.trim();
 
-    const digits =
-        value.replace(/\D/g,'');
+    const normalized =
+        getNormalizedPhone();
+
 
     const valid =
-        /^[+()\d\s-]+$/.test(value) &&
-        digits.length >= 7 &&
-        digits.length <= 15;
+        /^\+7\d{10}$/.test(normalized);
 
 
     if(show){
@@ -806,6 +1016,7 @@ function validatePhone(show){
                 'visible',
                 !valid
             );
+
 
         element.classList
             .toggle(
@@ -826,8 +1037,10 @@ function validateEmail(show){
     const element =
         $('clientsEmail');
 
+
     const value =
         element.value.trim();
+
 
     const valid =
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -841,6 +1054,7 @@ function validateEmail(show){
                 'visible',
                 !valid
             );
+
 
         element.classList
             .toggle(
@@ -888,7 +1102,9 @@ $('minusButton')
         function(){
 
             if(selectedPersons <= 1){
+
                 return;
+
             }
 
 
@@ -913,7 +1129,9 @@ $('plusButton')
         function(){
 
             if(selectedPersons >= maxPersons){
+
                 return;
+
             }
 
 
@@ -932,20 +1150,25 @@ $('plusButton')
    INPUT EVENTS
    ========================================== */
 
-[
-    'clientsName',
-    'clientsTelephoneNumber',
-    'clientsEmail'
-]
-.forEach(function(id){
+$('clientsName')
+    .addEventListener(
+        'input',
+        updateState
+    );
 
-    $(id)
-        .addEventListener(
-            'input',
-            updateState
-        );
 
-});
+$('clientsTelephoneNumber')
+    .addEventListener(
+        'input',
+        handlePhoneInput
+    );
+
+
+$('clientsEmail')
+    .addEventListener(
+        'input',
+        updateState
+    );
 
 
 $('clientsName')
@@ -964,6 +1187,21 @@ $('clientsTelephoneNumber')
     .addEventListener(
         'blur',
         function(){
+
+            /*
+                После завершения ввода
+                ещё раз форматируем номер.
+            */
+
+            const input =
+                $('clientsTelephoneNumber');
+
+
+            input.value =
+                formatRussianPhone(
+                    input.value
+                );
+
 
             validatePhone(true);
             updateState();
@@ -1007,18 +1245,7 @@ $('cancelButton')
         'click',
         function(){
 
-            /*
-                Если URL возврата передан,
-                открываем его.
-            */
-
             if(returnUrl){
-
-                /*
-                    Для Telegram-ссылки
-                    используем openTelegramLink(),
-                    если API доступен.
-                */
 
                 if(
                     tg &&
@@ -1045,11 +1272,6 @@ $('cancelButton')
                 }
 
 
-                /*
-                    Закрываем Web App
-                    после открытия ссылки.
-                */
-
                 setTimeout(
                     function(){
 
@@ -1070,11 +1292,6 @@ $('cancelButton')
 
             }
 
-
-            /*
-                Если URL не передан,
-                просто закрываем Web App.
-            */
 
             if(
                 tg &&
@@ -1119,12 +1336,54 @@ $('payButton')
                     .classList
                     .add('visible');
 
+
                 updateState();
 
                 return;
 
             }
 
+
+            /*
+                Перед отправкой ещё раз
+                нормализуем телефон.
+
+                В форме он остаётся:
+
+                +7(911) 123-4567
+
+                А нормализованное значение:
+
+                +79111234567
+            */
+
+            const normalizedPhone =
+                getNormalizedPhone();
+
+
+            if(!/^\+7\d{10}$/.test(normalizedPhone)){
+
+                validatePhone(true);
+
+                $('errorSummary')
+                    .classList
+                    .add('visible');
+
+                updateState();
+
+                return;
+
+            }
+
+
+            /*
+                Нормализованный номер теперь
+                доступен для дальнейшего использования.
+
+                Пока tg.sendData отправляет
+                ТОЛЬКО слово "Оплатить",
+                как было задано.
+            */
 
             $('loading')
                 .classList
@@ -1135,33 +1394,34 @@ $('payButton')
                 true;
 
 
-            /*
-                ВАЖНО:
-
-                Сейчас передаём в Salebot
-                РОВНО:
-
-                Оплатить
-
-                Без JSON.
-                Без дополнительных данных.
-            */
-
             if(
                 tg &&
                 typeof tg.sendData === 'function'
             ){
+
+                /*
+                    ВАЖНО:
+
+                    Salebot получает ровно:
+
+                    Оплатить
+                */
 
                 tg.sendData('Оплатить');
 
             }
             else{
 
-                /*
-                    Тестирование вне Telegram.
-                */
+                console.log(
+                    'Оплатить'
+                );
 
-                console.log('Оплатить');
+
+                console.log(
+                    'Нормализованный телефон:',
+                    normalizedPhone
+                );
+
 
                 alert(
                     'Тестовый режим:\n\nОплатить'
