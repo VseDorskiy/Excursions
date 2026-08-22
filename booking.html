@@ -332,17 +332,32 @@ function updatePersons(){
    PHONE
    ========================================== */
 
+/* ==========================================
+   PHONE
+   ========================================== */
+
+/*
+   Телефон отображается как маска:
+
+       +7(986) 123-4567
+
+   Редактируются только 10 цифр номера.
+   Код страны +7 и разделители не являются редактируемой частью.
+*/
+
 function getPhoneDigits(value){
     return String(value || '').replace(/\D/g,'');
 }
 
+
 /*
-   Возвращает 10 цифр российского номера.
+   Преобразование номера к 10 цифрам.
+
    Поддерживает:
-   79861234567
-   89861234567
-   +79861234567
-   9861234567
+       79861234567
+       89861234567
+       +79861234567
+       9861234567
 */
 function normalizeRussianPhoneDigits(value){
 
@@ -350,31 +365,30 @@ function normalizeRussianPhoneDigits(value){
 
     if(
         digits.length === 11 &&
-        digits.charAt(0) === '8'
-    ){
-        digits = digits.slice(1);
-    }
-    else if(
-        digits.length === 11 &&
-        digits.charAt(0) === '7'
+        (
+            digits.charAt(0) === '7' ||
+            digits.charAt(0) === '8'
+        )
     ){
         digits = digits.slice(1);
     }
 
-    if(digits.length === 10){
-        return digits;
-    }
-
-    return '';
+    return digits.length === 10
+        ? digits
+        : '';
 }
 
-/*
-   Отображение:
-   +7(986) 123-4567
 
-   Важно:
-   функция корректно работает и при вводе
-   номера по одной цифре.
+/*
+   Формирование отображаемого номера.
+
+   Примеры:
+
+       79861234567
+       -> +7(986) 123-4567
+
+       9861234567
+       -> +7(986) 123-4567
 */
 function formatRussianPhone(value){
 
@@ -385,29 +399,20 @@ function formatRussianPhone(value){
     }
 
     /*
-       Если первым символом введена 8,
-       считаем её кодом выхода на российскую
-       телефонную сеть.
+       Убираем 7 или 8 только если это полный
+       11-значный российский номер.
     */
-    if(digits.charAt(0) === '8'){
-        digits = digits.slice(1);
-    }
-
-    /*
-       Если введено 7 в начале, это код страны.
-    */
-    else if(
-        digits.charAt(0) === '7' &&
-        digits.length > 10
+    if(
+        digits.length === 11 &&
+        (
+            digits.charAt(0) === '7' ||
+            digits.charAt(0) === '8'
+        )
     ){
         digits = digits.slice(1);
     }
 
     digits = digits.slice(0,10);
-
-    if(!digits){
-        return '';
-    }
 
     let result = '+7(';
 
@@ -428,10 +433,58 @@ function formatRussianPhone(value){
     return result;
 }
 
+
 /*
-   Нормализованный номер для дальнейшей
-   передачи:
-   +79861234567
+   Возвращает позицию курсора в маске после
+   указанного количества цифр номера.
+
+   Индекс:
+       0 -> после +7(
+       1 -> после первой цифры
+       ...
+       10 -> конец номера
+*/
+function phoneCaretFromDigitIndex(digitIndex){
+
+    const positions = [
+        3,   // 0 цифр
+        4,   // 1
+        5,   // 2
+        6,   // 3
+        8,   // 4
+        9,   // 5
+        10,  // 6
+        12,  // 7
+        13,  // 8
+        14,  // 9
+        15   // 10
+    ];
+
+    return positions[
+        Math.min(
+            Math.max(digitIndex,0),
+            10
+        )
+    ];
+}
+
+
+/*
+   Определяет, сколько цифр номера находится
+   слева от текущей позиции курсора.
+*/
+function phoneDigitIndexAtCaret(value, caret){
+
+    return getPhoneDigits(
+        value.slice(0,caret)
+    ).length;
+}
+
+
+/*
+   Нормализованный номер для дальнейшей передачи:
+
+       +79861234567
 */
 function getNormalizedPhone(){
 
@@ -440,24 +493,365 @@ function getNormalizedPhone(){
             $('clientsTelephoneNumber').value
         );
 
-    if(digits.length !== 10){
-        return '';
-    }
-
-    return '+7' + digits;
+    return digits.length === 10
+        ? '+7' + digits
+        : '';
 }
 
+
+/*
+   Обработка paste / autofill / IME.
+
+   После изменения содержимого восстанавливаем маску,
+   но сохраняем логическую позицию курсора.
+*/
 function handlePhoneInput(){
 
     const input =
         $('clientsTelephoneNumber');
 
+    const oldValue =
+        input.value;
+
+    const oldCaret =
+        input.selectionStart === null
+            ? oldValue.length
+            : input.selectionStart;
+
+    const digitIndex =
+        phoneDigitIndexAtCaret(
+            oldValue,
+            oldCaret
+        );
+
+    const formatted =
+        formatRussianPhone(
+            oldValue
+        );
+
     input.value =
-        formatRussianPhone(input.value);
+        formatted;
+
+    const newCaret =
+        phoneCaretFromDigitIndex(
+            Math.min(
+                digitIndex,
+                getPhoneDigits(formatted).length
+            )
+        );
+
+    try{
+        input.setSelectionRange(
+            newCaret,
+            newCaret
+        );
+    }
+    catch(e){}
 
     updateState();
 }
 
+
+/*
+   Ручное редактирование номера.
+
+   Backspace / Delete удаляют именно цифры,
+   а не скобки, пробел или дефис.
+
+   Введённая цифра заменяет/вставляется
+   в текущую позицию.
+*/
+function handlePhoneKeydown(event){
+
+    const input =
+        $('clientsTelephoneNumber');
+
+    const value =
+        input.value;
+
+    const start =
+        input.selectionStart === null
+            ? value.length
+            : input.selectionStart;
+
+    const end =
+        input.selectionEnd === null
+            ? start
+            : input.selectionEnd;
+
+
+    /*
+       Не вмешиваемся в системные сочетания:
+       Ctrl+C, Ctrl+V, Ctrl+A и т.п.
+    */
+    if(
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey
+    ){
+        return;
+    }
+
+
+    /*
+       Клавиши навигации.
+    */
+    if(
+        [
+            'ArrowLeft',
+            'ArrowRight',
+            'Home',
+            'End',
+            'Tab'
+        ].includes(event.key)
+    ){
+        return;
+    }
+
+
+    /*
+       BACKSPACE
+    */
+    if(event.key === 'Backspace'){
+
+        event.preventDefault();
+
+        let digits =
+            getPhoneDigits(value);
+
+        let digitIndex =
+            phoneDigitIndexAtCaret(
+                value,
+                start
+            );
+
+        const endDigitIndex =
+            phoneDigitIndexAtCaret(
+                value,
+                end
+            );
+
+
+        /*
+           Если выделен участок номера,
+           удаляем выделенный участок.
+        */
+        if(
+            endDigitIndex > digitIndex
+        ){
+
+            digits =
+                digits.slice(0,digitIndex) +
+                digits.slice(endDigitIndex);
+
+        }
+
+        /*
+           Иначе удаляем предыдущую цифру.
+        */
+        else if(digitIndex > 0){
+
+            digitIndex--;
+
+            digits =
+                digits.slice(0,digitIndex) +
+                digits.slice(digitIndex + 1);
+
+        }
+
+        else{
+            return;
+        }
+
+
+        input.value =
+            formatRussianPhone(
+                digits
+            );
+
+
+        const caret =
+            phoneCaretFromDigitIndex(
+                digitIndex
+            );
+
+        input.setSelectionRange(
+            caret,
+            caret
+        );
+
+        updateState();
+
+        return;
+    }
+
+
+    /*
+       DELETE
+    */
+    if(event.key === 'Delete'){
+
+        event.preventDefault();
+
+        let digits =
+            getPhoneDigits(value);
+
+        const digitIndex =
+            phoneDigitIndexAtCaret(
+                value,
+                start
+            );
+
+        const endDigitIndex =
+            phoneDigitIndexAtCaret(
+                value,
+                end
+            );
+
+
+        /*
+           Если выделен участок,
+           удаляем выделенный участок.
+        */
+        if(
+            endDigitIndex > digitIndex
+        ){
+
+            digits =
+                digits.slice(0,digitIndex) +
+                digits.slice(endDigitIndex);
+
+        }
+
+        /*
+           Иначе удаляем цифру справа.
+        */
+        else if(
+            digitIndex < digits.length
+        ){
+
+            digits =
+                digits.slice(0,digitIndex) +
+                digits.slice(digitIndex + 1);
+
+        }
+
+        else{
+            return;
+        }
+
+
+        input.value =
+            formatRussianPhone(
+                digits
+            );
+
+
+        const caret =
+            phoneCaretFromDigitIndex(
+                digitIndex
+            );
+
+        input.setSelectionRange(
+            caret,
+            caret
+        );
+
+        updateState();
+
+        return;
+    }
+
+
+    /*
+       Ввод цифры.
+    */
+    if(/^\d$/.test(event.key)){
+
+        event.preventDefault();
+
+        let digits =
+            getPhoneDigits(value);
+
+        let digitIndex =
+            phoneDigitIndexAtCaret(
+                value,
+                start
+            );
+
+        const endDigitIndex =
+            phoneDigitIndexAtCaret(
+                value,
+                end
+            );
+
+
+        /*
+           Если что-то выделено,
+           заменяем выделенный участок.
+        */
+        if(
+            endDigitIndex > digitIndex
+        ){
+
+            digits =
+                digits.slice(0,digitIndex) +
+                digits.slice(endDigitIndex);
+        }
+
+
+        /*
+           Максимум 10 цифр номера.
+        */
+        if(digitIndex >= 10){
+            return;
+        }
+
+
+        /*
+           Вставляем новую цифру.
+        */
+        digits =
+            digits.slice(0,digitIndex) +
+            event.key +
+            digits.slice(digitIndex);
+
+
+        digits =
+            digits.slice(0,10);
+
+        digitIndex++;
+
+
+        input.value =
+            formatRussianPhone(
+                digits
+            );
+
+
+        const caret =
+            phoneCaretFromDigitIndex(
+                digitIndex
+            );
+
+        input.setSelectionRange(
+            caret,
+            caret
+        );
+
+        updateState();
+
+        return;
+    }
+
+
+    /*
+       Не разрешаем буквы и прочие символы.
+    */
+    if(event.key.length === 1){
+        event.preventDefault();
+    }
+}
 /* ==========================================
    VALIDATION
    ========================================== */
