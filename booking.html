@@ -327,41 +327,50 @@ function updatePersons(){
     $('amountToPay').textContent =
         formatNumber(total);
 }
-
 /* ==========================================
-   PHONE
-   ========================================== */
-
-/* ==========================================
-   PHONE
+   PHONE MASK
    ========================================== */
 
 /*
-   Телефон отображается как маска:
+   Маска:
 
-       +7(986) 123-4567
+   +7(___) ___-____
 
-   Редактируются только 10 цифр номера.
-   Код страны +7 и разделители не являются редактируемой частью.
+   Внутри храним только 10 цифр номера.
+   Пустая позиция = "".
 */
 
+
 function getPhoneDigits(value){
-    return String(value || '').replace(/\D/g,'');
-}
 
+    /*
+       Берём только цифры после +7.
+       Важно: постоянная семёрка страны
+       НЕ должна попадать в цифры номера.
+    */
 
-/*
-   Преобразование номера к 10 цифрам.
+    let text = String(value || '');
 
-   Поддерживает:
+    /*
+       Если это уже наша маска +7(...),
+       удаляем постоянный +7.
+    */
+    if(
+        text.indexOf('+7') === 0
+    ){
+        text = text.slice(2);
+    }
+
+    let digits =
+        text.replace(/\D/g,'');
+
+    /*
+       Поддержка исходных номеров:
+
        79861234567
        89861234567
        +79861234567
-       9861234567
-*/
-function normalizeRussianPhoneDigits(value){
-
-    let digits = getPhoneDigits(value);
+    */
 
     if(
         digits.length === 11 &&
@@ -373,96 +382,144 @@ function normalizeRussianPhoneDigits(value){
         digits = digits.slice(1);
     }
 
-    return digits.length === 10
-        ? digits
-        : '';
+    return digits.slice(0,10);
 }
 
 
 /*
-   Формирование отображаемого номера.
+   Получаем массив из 10 позиций.
 
-   Примеры:
+   Например:
 
-       79861234567
-       -> +7(986) 123-4567
+   986123
 
-       9861234567
-       -> +7(986) 123-4567
+   превращается в:
+
+   ["9","8","6","1","2","3","","","",""]
+*/
+function getPhoneSlots(value){
+
+    const digits =
+        getPhoneDigits(value);
+
+    const slots =
+        new Array(10).fill('');
+
+    for(
+        let i = 0;
+        i < digits.length && i < 10;
+        i++
+    ){
+        slots[i] = digits.charAt(i);
+    }
+
+    return slots;
+}
+
+
+/*
+   Формирует отображение:
+
+   +7(___) ___-____
+
+   или, например:
+
+   +7(986) 123-____
 */
 function formatRussianPhone(value){
 
-    let digits = getPhoneDigits(value);
+    const slots =
+        getPhoneSlots(value);
 
-    if(!digits){
-        return '';
-    }
-
-    /*
-       Убираем 7 или 8 только если это полный
-       11-значный российский номер.
-    */
-    if(
-        digits.length === 11 &&
-        (
-            digits.charAt(0) === '7' ||
-            digits.charAt(0) === '8'
-        )
-    ){
-        digits = digits.slice(1);
-    }
-
-    digits = digits.slice(0,10);
-
-    let result = '+7(';
-
-    result += digits.slice(0,3);
-
-    if(digits.length >= 3){
-        result += ') ';
-    }
-
-    if(digits.length > 3){
-        result += digits.slice(3,6);
-    }
-
-    if(digits.length > 6){
-        result += '-' + digits.slice(6,10);
-    }
-
-    return result;
+    return (
+        '+7(' +
+        slots.slice(0,3).map(x => x || '_').join('') +
+        ') ' +
+        slots.slice(3,6).map(x => x || '_').join('') +
+        '-' +
+        slots.slice(6,10).map(x => x || '_').join('')
+    );
 }
 
 
 /*
-   Возвращает позицию курсора в маске после
-   указанного количества цифр номера.
-
-   Индекс:
-       0 -> после +7(
-       1 -> после первой цифры
-       ...
-       10 -> конец номера
+   Получаем строку только из реально введённых цифр.
 */
-function phoneCaretFromDigitIndex(digitIndex){
+function getFilledPhoneDigits(){
+
+    const input =
+        $('clientsTelephoneNumber');
+
+    const slots =
+        getPhoneSlots(
+            input.value
+        );
+
+    return slots.join('');
+}
+
+
+/*
+   Нормализованный номер:
+
+       +79861234567
+
+   Если номер заполнен не полностью,
+   возвращаем пустую строку.
+*/
+function getNormalizedPhone(){
+
+    const input =
+        $('clientsTelephoneNumber');
+
+    const slots =
+        getPhoneSlots(
+            input.value
+        );
+
+    /*
+       Если хотя бы одна позиция пустая,
+       номер ещё не заполнен.
+    */
+    if(
+        slots.some(
+            digit => digit === ''
+        )
+    ){
+        return '';
+    }
+
+    return '+7' + slots.join('');
+}
+
+
+/*
+   Позиции курсора для 10 цифр.
+
+   0 = перед первой цифрой
+   1 = после первой
+   ...
+   10 = после последней
+*/
+function phoneCaretFromIndex(index){
 
     const positions = [
-        3,   // 0 цифр
-        4,   // 1
-        5,   // 2
-        6,   // 3
-        8,   // 4
-        9,   // 5
-        10,  // 6
-        12,  // 7
-        13,  // 8
-        14,  // 9
-        15   // 10
+        3,   // +7(|
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15
     ];
 
     return positions[
         Math.min(
-            Math.max(digitIndex,0),
+            Math.max(index,0),
             10
         )
     ];
@@ -470,119 +527,131 @@ function phoneCaretFromDigitIndex(digitIndex){
 
 
 /*
-   Определяет, сколько цифр номера находится
-   слева от текущей позиции курсора.
-*/
-function phoneDigitIndexAtCaret(value, caret){
+   Определяет индекс цифры по позиции курсора.
 
-    return getPhoneDigits(
-        value.slice(0,caret)
-    ).length;
+   Например:
+
+   +7(986) |123-4567
+
+   курсор находится перед 1,
+   значит index = 3.
+*/
+function phoneIndexFromCaret(caret){
+
+    if(caret <= 3){
+        return 0;
+    }
+
+    if(caret <= 4){
+        return 1;
+    }
+
+    if(caret <= 5){
+        return 2;
+    }
+
+    if(caret <= 6){
+        return 3;
+    }
+
+    if(caret <= 8){
+        return 4;
+    }
+
+    if(caret <= 9){
+        return 5;
+    }
+
+    if(caret <= 10){
+        return 6;
+    }
+
+    if(caret <= 12){
+        return 7;
+    }
+
+    if(caret <= 13){
+        return 8;
+    }
+
+    if(caret <= 14){
+        return 9;
+    }
+
+    return 10;
 }
 
 
 /*
-   Нормализованный номер для дальнейшей передачи:
+   Переход курсора через служебные символы.
 
-       +79861234567
+   Если курсор попал на ), пробел или -,
+   переносим его на следующую позицию цифры.
 */
-function getNormalizedPhone(){
+function normalizePhoneCaret(position){
 
-    const digits =
-        normalizeRussianPhoneDigits(
-            $('clientsTelephoneNumber').value
-        );
+    const separators = [
+        6,  // )
+        7,  // пробел
+        11  // -
+    ];
 
-    return digits.length === 10
-        ? '+7' + digits
-        : '';
+    while(
+        separators.includes(position)
+    ){
+        position++;
+    }
+
+    return Math.min(position,15);
 }
 
 
 /*
-   Обработка paste / autofill / IME.
-
-   После изменения содержимого восстанавливаем маску,
-   но сохраняем логическую позицию курсора.
+   Устанавливаем маску и курсор.
 */
-function handlePhoneInput(){
+function setPhoneValue(
+    slots,
+    digitIndex
+){
 
     const input =
         $('clientsTelephoneNumber');
 
-    const oldValue =
-        input.value;
+    let value =
+        '+7(' +
+        slots.slice(0,3).map(x => x || '_').join('') +
+        ') ' +
+        slots.slice(3,6).map(x => x || '_').join('') +
+        '-' +
+        slots.slice(6,10).map(x => x || '_').join('');
 
-    const oldCaret =
-        input.selectionStart === null
-            ? oldValue.length
-            : input.selectionStart;
+    input.value = value;
 
-    const digitIndex =
-        phoneDigitIndexAtCaret(
-            oldValue,
-            oldCaret
+    const caret =
+        phoneCaretFromIndex(
+            digitIndex
         );
 
-    const formatted =
-        formatRussianPhone(
-            oldValue
-        );
-
-    input.value =
-        formatted;
-
-    const newCaret =
-        phoneCaretFromDigitIndex(
-            Math.min(
-                digitIndex,
-                getPhoneDigits(formatted).length
-            )
-        );
-
-    try{
-        input.setSelectionRange(
-            newCaret,
-            newCaret
-        );
-    }
-    catch(e){}
+    input.setSelectionRange(
+        caret,
+        caret
+    );
 
     updateState();
 }
 
 
 /*
-   Ручное редактирование номера.
-
-   Backspace / Delete удаляют именно цифры,
-   а не скобки, пробел или дефис.
-
-   Введённая цифра заменяет/вставляется
-   в текущую позицию.
+   Ввод цифры.
 */
 function handlePhoneKeydown(event){
 
     const input =
         $('clientsTelephoneNumber');
 
-    const value =
-        input.value;
-
-    const start =
-        input.selectionStart === null
-            ? value.length
-            : input.selectionStart;
-
-    const end =
-        input.selectionEnd === null
-            ? start
-            : input.selectionEnd;
-
-
     /*
-       Не вмешиваемся в системные сочетания:
-       Ctrl+C, Ctrl+V, Ctrl+A и т.п.
+       Разрешаем Ctrl+C / Ctrl+V / Ctrl+A
+       и другие системные комбинации.
     */
     if(
         event.ctrlKey ||
@@ -594,7 +663,7 @@ function handlePhoneKeydown(event){
 
 
     /*
-       Клавиши навигации.
+       Навигация.
     */
     if(
         [
@@ -609,6 +678,20 @@ function handlePhoneKeydown(event){
     }
 
 
+    const slots =
+        getPhoneSlots(
+            input.value
+        );
+
+    let caret =
+        input.selectionStart === null
+            ? 15
+            : input.selectionStart;
+
+    let digitIndex =
+        phoneIndexFromCaret(caret);
+
+
     /*
        BACKSPACE
     */
@@ -616,71 +699,64 @@ function handlePhoneKeydown(event){
 
         event.preventDefault();
 
-        let digits =
-            getPhoneDigits(value);
-
-        let digitIndex =
-            phoneDigitIndexAtCaret(
-                value,
-                start
-            );
-
-        const endDigitIndex =
-            phoneDigitIndexAtCaret(
-                value,
-                end
-            );
-
 
         /*
-           Если выделен участок номера,
-           удаляем выделенный участок.
+           Если есть выделение,
+           удаляем все выбранные цифры.
         */
+        const selectionStart =
+            input.selectionStart;
+
+        const selectionEnd =
+            input.selectionEnd;
+
         if(
-            endDigitIndex > digitIndex
+            selectionStart !== selectionEnd
         ){
 
-            digits =
-                digits.slice(0,digitIndex) +
-                digits.slice(endDigitIndex);
+            const startIndex =
+                phoneIndexFromCaret(
+                    selectionStart
+                );
 
-        }
+            const endIndex =
+                phoneIndexFromCaret(
+                    selectionEnd
+                );
 
-        /*
-           Иначе удаляем предыдущую цифру.
-        */
-        else if(digitIndex > 0){
+            for(
+                let i = startIndex;
+                i < endIndex && i < 10;
+                i++
+            ){
+                slots[i] = '';
+            }
 
-            digitIndex--;
+            setPhoneValue(
+                slots,
+                startIndex
+            );
 
-            digits =
-                digits.slice(0,digitIndex) +
-                digits.slice(digitIndex + 1);
-
-        }
-
-        else{
             return;
         }
 
 
-        input.value =
-            formatRussianPhone(
-                digits
-            );
+        /*
+           Нет выделения.
 
+           Удаляем цифру слева от курсора.
+        */
+        if(digitIndex > 0){
 
-        const caret =
-            phoneCaretFromDigitIndex(
+            digitIndex--;
+
+            slots[digitIndex] = '';
+
+            setPhoneValue(
+                slots,
                 digitIndex
             );
-
-        input.setSelectionRange(
-            caret,
-            caret
-        );
-
-        updateState();
+        }
 
         return;
     }
@@ -693,71 +769,56 @@ function handlePhoneKeydown(event){
 
         event.preventDefault();
 
-        let digits =
-            getPhoneDigits(value);
 
-        const digitIndex =
-            phoneDigitIndexAtCaret(
-                value,
-                start
-            );
+        const selectionStart =
+            input.selectionStart;
 
-        const endDigitIndex =
-            phoneDigitIndexAtCaret(
-                value,
-                end
-            );
+        const selectionEnd =
+            input.selectionEnd;
 
-
-        /*
-           Если выделен участок,
-           удаляем выделенный участок.
-        */
         if(
-            endDigitIndex > digitIndex
+            selectionStart !== selectionEnd
         ){
 
-            digits =
-                digits.slice(0,digitIndex) +
-                digits.slice(endDigitIndex);
+            const startIndex =
+                phoneIndexFromCaret(
+                    selectionStart
+                );
 
-        }
+            const endIndex =
+                phoneIndexFromCaret(
+                    selectionEnd
+                );
 
-        /*
-           Иначе удаляем цифру справа.
-        */
-        else if(
-            digitIndex < digits.length
-        ){
+            for(
+                let i = startIndex;
+                i < endIndex && i < 10;
+                i++
+            ){
+                slots[i] = '';
+            }
 
-            digits =
-                digits.slice(0,digitIndex) +
-                digits.slice(digitIndex + 1);
+            setPhoneValue(
+                slots,
+                startIndex
+            );
 
-        }
-
-        else{
             return;
         }
 
 
-        input.value =
-            formatRussianPhone(
-                digits
-            );
+        /*
+           Удаляем цифру справа.
+        */
+        if(digitIndex < 10){
 
+            slots[digitIndex] = '';
 
-        const caret =
-            phoneCaretFromDigitIndex(
+            setPhoneValue(
+                slots,
                 digitIndex
             );
-
-        input.setSelectionRange(
-            caret,
-            caret
-        );
-
-        updateState();
+        }
 
         return;
     }
@@ -766,42 +827,16 @@ function handlePhoneKeydown(event){
     /*
        Ввод цифры.
     */
-    if(/^\d$/.test(event.key)){
+    if(
+        /^\d$/.test(event.key)
+    ){
 
         event.preventDefault();
 
-        let digits =
-            getPhoneDigits(value);
-
-        let digitIndex =
-            phoneDigitIndexAtCaret(
-                value,
-                start
-            );
-
-        const endDigitIndex =
-            phoneDigitIndexAtCaret(
-                value,
-                end
-            );
-
 
         /*
-           Если что-то выделено,
-           заменяем выделенный участок.
-        */
-        if(
-            endDigitIndex > digitIndex
-        ){
-
-            digits =
-                digits.slice(0,digitIndex) +
-                digits.slice(endDigitIndex);
-        }
-
-
-        /*
-           Максимум 10 цифр номера.
+           Если курсор находится после
+           последней позиции — ничего не делаем.
         */
         if(digitIndex >= 10){
             return;
@@ -809,48 +844,86 @@ function handlePhoneKeydown(event){
 
 
         /*
-           Вставляем новую цифру.
+           Если цифра вводится в пустую позицию —
+           просто заполняем её.
         */
-        digits =
-            digits.slice(0,digitIndex) +
-            event.key +
-            digits.slice(digitIndex);
+        slots[digitIndex] =
+            event.key;
 
 
-        digits =
-            digits.slice(0,10);
-
-        digitIndex++;
-
-
-        input.value =
-            formatRussianPhone(
-                digits
-            );
-
-
-        const caret =
-            phoneCaretFromDigitIndex(
-                digitIndex
-            );
-
-        input.setSelectionRange(
-            caret,
-            caret
+        /*
+           Если после текущей позиции
+           уже есть цифры, новая цифра
+           заменяет текущую.
+        */
+        setPhoneValue(
+            slots,
+            digitIndex + 1
         );
-
-        updateState();
 
         return;
     }
 
 
     /*
-       Не разрешаем буквы и прочие символы.
+       Запрещаем любые остальные символы.
     */
     if(event.key.length === 1){
         event.preventDefault();
     }
+}
+
+
+/*
+   Обработка вставки номера мышкой / Ctrl+V,
+   автозаполнения браузером и т.п.
+*/
+function handlePhoneInput(){
+
+    const input =
+        $('clientsTelephoneNumber');
+
+    const rawValue =
+        input.value;
+
+    /*
+       Если браузер вставил полный номер,
+       преобразуем его в маску.
+    */
+    const formatted =
+        formatRussianPhone(
+            rawValue
+        );
+
+    input.value =
+        formatted;
+
+    /*
+       После paste ставим курсор
+       в конец заполненной части.
+    */
+    const slots =
+        getPhoneSlots(formatted);
+
+    let digitIndex = 0;
+
+    while(
+        digitIndex < 10 &&
+        slots[digitIndex] !== ''
+    ){
+        digitIndex++;
+    }
+
+    input.setSelectionRange(
+        phoneCaretFromIndex(
+            digitIndex
+        ),
+        phoneCaretFromIndex(
+            digitIndex
+        )
+    );
+
+    updateState();
 }
 /* ==========================================
    VALIDATION
